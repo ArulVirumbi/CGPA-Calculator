@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "109884256472",
+    "firebase_url": "https://cgpa-calculator-17a00-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "cgpa-calculator-17a00",
+    "storage_bucket": "cgpa-calculator-17a00.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:109884256472:android:08db667a58319e4fa6e7ad",
+        "android_client_info": {
+          "package_name": "com.example.cgpa_calculator"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "109884256472-abv6etd8lb581c391omrt49rir0gd4nm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrUe7AhRj4fnsqAbvg-vJz0xVYWZE0XeA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "109884256472-abv6etd8lb581c391omrt49rir0gd4nm.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "109884256472-o50gjv38pufmmap1euqccnsra6n4hfem.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.cgpaCalculator"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
