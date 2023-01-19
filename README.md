@@ -3,7 +3,7 @@
 Android Application to calculate CGPA
 
 You can download the apk file from the drive link below:
-<a href="https://drive.google.com/file/d/14fT_BNPrKY1Nq2IDnCo6fxKj7wJzPWj9/view?usp=sharing" download>
+<a href="https://github.com/ArulVirumbi/CGPA-Calculator/releases/download/v1.0/CGPA.Calculator-v1.apk" download>
   Download APK
 </a>
 
