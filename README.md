@@ -27,4 +27,4 @@ The detailed explanation on how to use the app is given below:
 ## Feedback 
 We value your feedback and would love to hear your thoughts on the app. If you have any suggestions or issues, please let us know by emailing us at swcgpacalculator@gmail.com
 
-Thank you for choosing the CGPA Calculator App!
+Thank you for choosing the CGPA Calculator App! 
