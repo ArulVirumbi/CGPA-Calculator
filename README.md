@@ -4,7 +4,7 @@ Android Application to calculate CGPA
 
 You can download the apk file from the drive link below:
 <button type="button" download><a href="https://drive.google.com/file/d/14fT_BNPrKY1Nq2IDnCo6fxKj7wJzPWj9/view?usp=sharing">
-  <i class="fas fa-download"></i> Download example.zip
+  <i class="fas fa-download"></i> Download APK
 </a></button>
 
 The detailed explanation on how to use the app is given below:
