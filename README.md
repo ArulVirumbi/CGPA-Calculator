@@ -11,5 +11,5 @@ The detailed explanation on how to use the app is given below:
 [App Manual.docx](https://github.com/ArulVirumbi/CGPA-Calculator/files/10453539/Report.docx)
 
 ### Video Demo
-<iframe src="https://drive.google.com/file/d/1Yy09PlgnOej3_RIr-RnH9Xnh0bZANwrr/view?usp=sharing" width="560" height="315"></iframe>
+<video src="https://drive.google.com/file/d/1Yy09PlgnOej3_RIr-RnH9Xnh0bZANwrr/view?usp=sharing" width="560" ></video>
 
