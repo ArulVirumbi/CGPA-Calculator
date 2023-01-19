@@ -1,4 +1,5 @@
 import 'dart:core';
+import 'package:async/async.dart';
 import 'package:cgpa_calculator/auth_controller.dart';
 import 'package:cgpa_calculator/result.dart';
 import 'package:cgpa_calculator/slider_widget.dart';
@@ -6,14 +7,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cgpa_calculator/gradeInput.dart';
-import 'package:cgpa_calculator/login_page.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'firebase_options.dart';
 import 'package:get/get.dart';
 import 'package:group_button/group_button.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cgpa_calculator/developer_page.dart';
-// import 'package:path_provider/path_provider.dart';
+// import 'package:cgpa_calculator/User.dart';
 
 List<String> type_list = <String>['Regular','Lateral'];
 List<int> sem_list = <int>[1,2,3,4,5,6,7,8,9,10];
@@ -303,18 +304,9 @@ Map prodCourseList = {
     'Project Work II' : 4
   }
 };
-// Map courseList={};
+
 List grades=[];
-
-
-// Future<void> _write(Map<String, dynamic> map) async {
-//   final jsonStr = jsonEncode(map);
-//   final directory = await getApplicationDocumentsDirectory();
-//   final file = File("${directory.path}/answers.txt");
-//   final file = File(filePath);
-//
-//   await file.writeAsString(jsonStr);
-// }
+final FirebaseAuth auth = FirebaseAuth.instance;
 
 
 
@@ -354,7 +346,6 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      // home: const Calculator(stType: 'Regular', semNo: 1, cgType: 'CGPA'),
       home: MyHomePage(),
       debugShowCheckedModeBanner: false,
     );
@@ -378,38 +369,57 @@ class _MyHomePageState extends State<MyHomePage> {
   int sem_no = 1;
   String cg_type = 'CGPA';
   String dept = 'EEE SW';
-  // String ft_type = 'yes';
   List ft_sem = [];
   int? stTypeValue = 0;
   int? cgTypeValue = 0;
   List ftList = ["8"];
-  // int? ftTypeValue = 0;
+  String userName='';
+  @override
+  void initState(){
+    super.initState();
+    _getName();
+  }
+
+  Future<void> _getName() async {
+    final User? user = auth.currentUser;
+    final uid = user?.uid;
+    final databaseReference = FirebaseFirestore.instance;
+    await databaseReference
+        .collection("users")
+        .doc(uid)
+        .get()
+        .then((DocumentSnapshot doc) {
+      setState(() {
+        userName = doc.get('Name');
+      });
+    });
+  }
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
 
       appBar: AppBar(
-        title: Center(child: const Text("CGPA Calculator")),
+        title: const Center(child: Text("CGPA Calculator")),
         leading: GestureDetector(
           onTap: (){
             Navigator.push(context, MaterialPageRoute(
                 builder: (context) => developerPage()));
           },
-          child: Icon(
+          child: const Icon(
             Icons.info_outline,
           ),
         ),
           actions: <Widget>[
           IconButton(onPressed: () {
             AuthController.instance.logOut();
-            }, icon: Icon(
+            }, icon: const Icon(
             Icons.logout_outlined,
             size: 26.0,
             )
           ),]
       ),
       body:Container(
+        height: MediaQuery.of(context).size.height,
         decoration: const BoxDecoration(
         image: DecorationImage(
             image: AssetImage("img/bg1.png"),
@@ -417,251 +427,256 @@ class _MyHomePageState extends State<MyHomePage> {
             fit: BoxFit.cover,
           )
         ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                "Select Department",
-                style: TextStyle(fontSize:22, fontWeight: FontWeight.bold),
-              ),
+        child: SingleChildScrollView(
+          child: Center(
+            child: Column(
+              // mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 30,),
+                Text("Hi, ${userName}",style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),),
+                const SizedBox(height: 50,),
+                const Text(
+                  "Select Department",
+                  style: TextStyle(fontSize:20, fontWeight: FontWeight.bold),
+                ),
 
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, bottom: 24.0),
-                child: DropdownButton(
-                  alignment: AlignmentDirectional.center,
-                  value: dept,
-                  icon: const Icon(Icons.keyboard_arrow_down),
-                  style: const TextStyle(fontSize: 20, color: Colors.black,),
-                  items: dept_list.map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      alignment: AlignmentDirectional.center,
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      if(newValue == 'EEE SW'){
-                        ftList = ["8"];
-                      }
-                      else if(newValue == 'Mechanical SW'){
-                        ftList = ["7","8"];
-                      }
-                      else if(newValue == 'Production SW'){
-                        ftList = ["5","6","7"];
-                      }
-                      dept = newValue!;
-                    });
-                  },
-                ),
-              ),
-              const Text(
-                "Select Regular or Lateral",
-                style: TextStyle(fontSize:22, fontWeight: FontWeight.bold),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top:12.0, bottom:28.0),
-                child: CupertinoSlidingSegmentedControl<int>(
-                  backgroundColor:  Colors.lightBlueAccent,
-                  thumbColor: Colors.white,
-                  padding: EdgeInsets.all(8),
-                  groupValue: stTypeValue,
-                  children: {
-                    0: buildSegment(type_list[0]),
-                    1: buildSegment(type_list[1]),
-                  },
-                  onValueChanged: (value){
-                    setState(() {
-                      st_type=type_list[value!];
-                      stTypeValue = value;
-                    });
-                  },
-                ),
-              ),
-              //
-              const Text(
-                "Select Semester Number",
-                style: TextStyle(fontSize:22, fontWeight: FontWeight.bold),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 12.0, bottom: 28.0),
-                child: SliderWidget(
-                    semNo: sem_no.toDouble(),
-                    onChange: (value){
-                      sem_no=value;
-                    }),
-              ),
-              const Text(
-                "Select GPA or CGPA",
-                style: TextStyle(fontSize:22, fontWeight: FontWeight.bold),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top:12.0, bottom:28.0),
-                child: CupertinoSlidingSegmentedControl<int>(
-                  backgroundColor:  Colors.lightBlueAccent,
-                  thumbColor: Colors.white,
-                  padding: EdgeInsets.all(8),
-                  groupValue: cgTypeValue,
-                  children: {
-                    0: buildSegment(gpa_list[0]),
-                    1: buildSegment(gpa_list[1]),
-                  },
-                  onValueChanged: (value){
-                    setState(() {
-                      cg_type=gpa_list[value!];
-                      cgTypeValue = value;
-                    });
-                  },
-                ),
-              ),
-              const Text(
-                "Select Fastrack sem",
-                style: TextStyle(fontSize:22, fontWeight: FontWeight.bold),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top:8.0, bottom: 24.0),
-                child: GroupButton(
-                  buttons: ftList,
-                  isRadio: false,
-                  options: GroupButtonOptions(
-                    selectedShadow: const [],
-                    selectedTextStyle: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                    ),
-                    selectedColor: Colors.blue[300],
-                    unselectedShadow: const [],
-                    unselectedColor: Colors.white54,
-                    unselectedTextStyle: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.black,
-                    ),
-                    selectedBorderColor: Colors.blue[900],
-                    unselectedBorderColor: Colors.black,
-                    borderRadius: BorderRadius.circular(80),
-                    spacing: 20,
-                    runSpacing: 10,
-                    groupingType: GroupingType.wrap,
-                    direction: Axis.horizontal,
-                    buttonHeight: 50,
-                    buttonWidth: 50,
-                    mainGroupAlignment: MainGroupAlignment.center,
-                    crossGroupAlignment: CrossGroupAlignment.center,
-                    groupRunAlignment: GroupRunAlignment.start,
-                    textAlign: TextAlign.center,
-                    textPadding: EdgeInsets.zero,
-                    alignment: Alignment.center,
-                    elevation: 0,
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0, bottom: 24.0),
+                  child: DropdownButton(
+                    alignment: AlignmentDirectional.center,
+                    value: dept,
+                    icon: const Icon(Icons.keyboard_arrow_down),
+                    style: const TextStyle(fontSize: 20, color: Colors.black,),
+                    items: dept_list.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        alignment: AlignmentDirectional.center,
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        if(newValue == 'EEE SW'){
+                          ftList = ["8"];
+                        }
+                        else if(newValue == 'Mechanical SW'){
+                          ftList = ["7","8"];
+                        }
+                        else if(newValue == 'Production SW'){
+                          ftList = ["5","6","7"];
+                        }
+                        dept = newValue!;
+                      });
+                    },
                   ),
-                  onSelected: (value,i,n) {
-                    setState(() {
-                      if(n==true) {
-                        ft_sem.add(value);
-                      }else{
-                        ft_sem.remove(value);
-                      }
-                    });
-                  },
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(style: ButtonStyle(
-                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(36.0),
-                        )
-                    )
-                ), onPressed: (){
-                  if (st_type=='Lateral' && (sem_no==1 || sem_no==2)) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Select Correct Semester Number')),
-                    );
-                  }
-                  else if(ft_sem.length>2){
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Fastrack semesters exceeded the limit')),
-                    );
-                  }
-                  else {
-                    switch(dept){
-                      case 'EEE SW':
-                        course_list = eeeCourseList;
-                        if(ft_sem.contains('8')){
-                          course_list[10].removeWhere((key, value) => key == "Professional Elective VI");
-                          course_list[8].addEntries({"Professional Elective VI":3}.entries);
-                        }
-                        else{
-                          course_list[8].removeWhere((key, value) => key == "Professional Elective VI");
-                          course_list[10].addEntries({"Professional Elective VI":3}.entries);
-                        }
-                        break;
-                      case 'Mechanical SW':
-                        course_list = mechCourseList;
-                        if(ft_sem.contains('7')){
-                          course_list[9].removeWhere((key, value) => key == "Professional Elective V");
-                          course_list[8].addEntries({"Professional Elective V":3}.entries);
+                const Text(
+                  "Select Regular or Lateral",
+                  style: TextStyle(fontSize:20, fontWeight: FontWeight.bold),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top:8.0, bottom:28.0),
+                  child: CupertinoSlidingSegmentedControl<int>(
+                    backgroundColor:  Colors.lightBlueAccent,
+                    thumbColor: Colors.white,
+                    padding: const EdgeInsets.all(8),
+                    groupValue: stTypeValue,
+                    children: {
+                      0: buildSegment(type_list[0]),
+                      1: buildSegment(type_list[1]),
+                    },
+                    onValueChanged: (value){
+                      setState(() {
+                        st_type=type_list[value!];
+                        stTypeValue = value;
+                      });
+                    },
+                  ),
+                ),
+                //
+                const Text(
+                  "Select Semester Number",
+                  style: TextStyle(fontSize:20, fontWeight: FontWeight.bold),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0, bottom: 28.0),
+                  child: SliderWidget(
+                      semNo: sem_no.toDouble(),
+                      onChange: (value){
+                        sem_no=value;
+                      }),
+                ),
+                const Text(
+                  "Select GPA or CGPA",
+                  style: TextStyle(fontSize:20, fontWeight: FontWeight.bold),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top:8.0, bottom:28.0),
+                  child: CupertinoSlidingSegmentedControl<int>(
+                    backgroundColor:  Colors.lightBlueAccent,
+                    thumbColor: Colors.white,
+                    padding: const EdgeInsets.all(8),
+                    groupValue: cgTypeValue,
+                    children: {
+                      0: buildSegment(gpa_list[0]),
+                      1: buildSegment(gpa_list[1]),
+                    },
+                    onValueChanged: (value){
+                      setState(() {
+                        cg_type=gpa_list[value!];
+                        cgTypeValue = value;
+                      });
+                    },
+                  ),
+                ),
+                const Text(
+                  "Select Fastrack sem",
+                  style: TextStyle(fontSize:20, fontWeight: FontWeight.bold),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top:4.0, bottom: 24.0),
+                  child: GroupButton(
+                    buttons: ftList,
+                    isRadio: false,
+                    options: GroupButtonOptions(
+                      selectedShadow: const [],
+                      selectedTextStyle: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                      ),
+                      selectedColor: Colors.blue[300],
+                      unselectedShadow: const [],
+                      unselectedColor: Colors.white54,
+                      unselectedTextStyle: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.black,
+                      ),
+                      selectedBorderColor: Colors.blue[900],
+                      unselectedBorderColor: Colors.black,
+                      borderRadius: BorderRadius.circular(80),
+                      spacing: 20,
+                      runSpacing: 10,
+                      groupingType: GroupingType.wrap,
+                      direction: Axis.horizontal,
+                      buttonHeight: 50,
+                      buttonWidth: 50,
+                      mainGroupAlignment: MainGroupAlignment.center,
+                      crossGroupAlignment: CrossGroupAlignment.center,
+                      groupRunAlignment: GroupRunAlignment.start,
+                      textAlign: TextAlign.center,
+                      textPadding: EdgeInsets.zero,
+                      alignment: Alignment.center,
+                      elevation: 0,
+                    ),
+                    onSelected: (value,i,n) {
+                      setState(() {
+                        if(n==true) {
+                          ft_sem.add(value);
                         }else{
-                          course_list[8].removeWhere((key, value) => key == "Professional Elective V");
-                          course_list[9].addEntries({"Professional Elective V":3}.entries);
+                          ft_sem.remove(value);
                         }
-                        if(ft_sem.contains('8')){
-                          course_list[9].removeWhere((key, value) => key == "Professional Elective VI");
-                          course_list[7].addEntries({"Professional Elective VI":3}.entries);
-                        }else{
-                          course_list[7].removeWhere((key, value) => key == "Professional Elective VI");
-                          course_list[9].addEntries({"Professional Elective VI":3}.entries);
-                        }
-                        break;
-                      case 'Production SW':
-                        course_list = prodCourseList;
-                        if(ft_sem.contains('5')){
-                          course_list[10].removeWhere((key, value) => key == "Professional Elective VI");
-                          course_list[8].addEntries({"Professional Elective VI":3}.entries);
-                        }
-                        else{
-                          course_list[8].removeWhere((key, value) => key == "Professional Elective V");
-                          course_list[9].addEntries({"Professional Elective V":3}.entries);
-                        }
-                        if(ft_sem.contains('6')){
-                          course_list[9].removeWhere((key, value) => key == "Professional Elective VI");
-                          course_list[7].addEntries({"Professional Elective VI":3}.entries);
-                        }else{
-                          course_list[7].removeWhere((key, value) => key == "Professional Elective VI");
-                          course_list[9].addEntries({"Professional Elective VI":3}.entries);
-                        }
-                        if(ft_sem.contains('7')){
-                          course_list[10].removeWhere((key, value) => key == "Professional Elective VI");
-                          course_list[8].addEntries({"Professional Elective VI":3}.entries);
-                        }
-                        else{
-                          course_list[8].removeWhere((key, value) => key == "Professional Elective V");
-                          course_list[9].addEntries({"Professional Elective V":3}.entries);
-                        }
-                        break;
+                      });
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(style: ButtonStyle(
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(36.0),
+                          )
+                      )
+                  ), onPressed: (){
+                    if (st_type=='Lateral' && (sem_no==1 || sem_no==2)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Select Correct Semester Number')),
+                      );
                     }
+                    else if(ft_sem.length>2){
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Fastrack semesters exceeded the limit')),
+                      );
+                    }
+                    else {
+                      switch(dept){
+                        case 'EEE SW':
+                          course_list = eeeCourseList;
+                          if(ft_sem.contains('8')){
+                            course_list[10].removeWhere((key, value) => key == "Professional Elective VI");
+                            course_list[8].addEntries({"Professional Elective VI":3}.entries);
+                          }
+                          else{
+                            course_list[8].removeWhere((key, value) => key == "Professional Elective VI");
+                            course_list[10].addEntries({"Professional Elective VI":3}.entries);
+                          }
+                          break;
+                        case 'Mechanical SW':
+                          course_list = mechCourseList;
+                          if(ft_sem.contains('7')){
+                            course_list[9].removeWhere((key, value) => key == "Professional Elective V");
+                            course_list[8].addEntries({"Professional Elective V":3}.entries);
+                          }else{
+                            course_list[8].removeWhere((key, value) => key == "Professional Elective V");
+                            course_list[9].addEntries({"Professional Elective V":3}.entries);
+                          }
+                          if(ft_sem.contains('8')){
+                            course_list[9].removeWhere((key, value) => key == "Professional Elective VI");
+                            course_list[7].addEntries({"Professional Elective VI":3}.entries);
+                          }else{
+                            course_list[7].removeWhere((key, value) => key == "Professional Elective VI");
+                            course_list[9].addEntries({"Professional Elective VI":3}.entries);
+                          }
+                          break;
+                        case 'Production SW':
+                          course_list = prodCourseList;
+                          if(ft_sem.contains('5')){
+                            course_list[10].removeWhere((key, value) => key == "Professional Elective VI");
+                            course_list[8].addEntries({"Professional Elective VI":3}.entries);
+                          }
+                          else{
+                            course_list[8].removeWhere((key, value) => key == "Professional Elective V");
+                            course_list[9].addEntries({"Professional Elective V":3}.entries);
+                          }
+                          if(ft_sem.contains('6')){
+                            course_list[9].removeWhere((key, value) => key == "Professional Elective VI");
+                            course_list[7].addEntries({"Professional Elective VI":3}.entries);
+                          }else{
+                            course_list[7].removeWhere((key, value) => key == "Professional Elective VI");
+                            course_list[9].addEntries({"Professional Elective VI":3}.entries);
+                          }
+                          if(ft_sem.contains('7')){
+                            course_list[10].removeWhere((key, value) => key == "Professional Elective VI");
+                            course_list[8].addEntries({"Professional Elective VI":3}.entries);
+                          }
+                          else{
+                            course_list[8].removeWhere((key, value) => key == "Professional Elective V");
+                            course_list[9].addEntries({"Professional Elective V":3}.entries);
+                          }
+                          break;
+                      }
 
-                    grades = List.generate(10, (i) => List.generate(course_list[i+1].length,(index) => 8));
-                    Navigator.push(context, MaterialPageRoute(
-                        builder: (context) => Calculator(dept: dept,stType: st_type, semNo: sem_no, cgType: cg_type, ftSem: ft_sem, courseList: course_list)));
-                  }
-                }, child: const Padding(
-                  padding: EdgeInsets.only(top: 12.0, bottom: 12.0, left: 8.0, right: 8.0),
-                  child: Text('Submit', style: TextStyle(fontSize: 20),),
+                      grades = List.generate(10, (i) => List.generate(course_list[i+1].length,(index) => 8));
+                      Navigator.push(context, MaterialPageRoute(
+                          builder: (context) => Calculator(dept: dept,stType: st_type, semNo: sem_no, cgType: cg_type, ftSem: ft_sem, courseList: course_list)));
+                    }
+                  }, child: const Padding(
+                    padding: EdgeInsets.only(top: 12.0, bottom: 12.0, left: 8.0, right: 8.0),
+                    child: Text('Submit', style: TextStyle(fontSize: 20),),
+                  ),
+                  ),
                 ),
-                ),
-              ),
-            ],
+              ],
+            ),
+
           ),
-
         ),
     ),
 
     );
   }
   Widget buildSegment(String text){
-    return Text(text,style: const TextStyle(fontSize: 22,
+    return Text(text,style: const TextStyle(fontSize: 20,
         color: Colors.black),);
   }
 
@@ -685,7 +700,6 @@ class Calculator extends StatefulWidget {
 
 class _CalculatorState extends State<Calculator> {
   bool light=false;
-  final FirebaseAuth auth = FirebaseAuth.instance;
   Map data={'semNo':1};
   int _currIndex=0;
   bool _isButtonDisabled = false;
@@ -694,13 +708,6 @@ class _CalculatorState extends State<Calculator> {
     final User? user = auth.currentUser;
     final uid = user?.uid;
     var docUser = FirebaseFirestore.instance.collection('users').doc(uid);
-    docUser.get().then(
-          (DocumentSnapshot doc) {
-        data = doc.data() as Map<String, dynamic>;
-      },
-      onError: (e) => print("Error getting document: $e"),
-    );
-
     int start = 0;
     int end = widget.semNo;
     int iter = widget.semNo;
@@ -785,9 +792,7 @@ class _CalculatorState extends State<Calculator> {
                           ));
                         }
 
-                        // setState(() {
-                        //   grades[0][0]=10;
-                        // });
+
                       },icon: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 350),
                           transitionBuilder: (child, anim) => RotationTransition(
@@ -803,7 +808,6 @@ class _CalculatorState extends State<Calculator> {
                             key: const ValueKey('icon2'),
                             size: 22.0, color: Colors.white,
                           )),
-                      // Icon(Icons.download,size: 22.0, color: Colors.white,)
 
                       ),
                     ),
@@ -864,29 +868,24 @@ class _CalculatorState extends State<Calculator> {
                         )
                     )
                 ),onPressed: (){
-
-                    // ScaffoldMessenger.of(context).showSnackBar(
-                    //   SnackBar(content: Text(grades[9][0].toString())),
-                    // );
                   if(widget.cgType=='GPA'){
                     if(light==true){
-                      var map1 = { for (var e in grades) (grades.indexOf(e)+1).toString() : e };
-                      var result = docUser.set({
-                        'dept': widget.dept,
-                        'st_type':widget.stType,
-                        'semNo':widget.semNo,
-                        'fastrack': widget.ftSem,
-                        'grades':map1,
+                      var result = docUser.update({
+                        "dept": widget.dept,
+                        "st_type":widget.stType,
+                        "semNo":widget.semNo,
+                        "fastrack": widget.ftSem,
+                        "grades.${widget.semNo}":grades[widget.semNo-1],
                       });
                     }
                     showDialog(context: context, builder:(context){
                      return AlertDialog(
-                       title: Center(child: const Text("Result")),
+                       title: const Center(child: Text("Result")),
                        content: Padding(
                          padding: const EdgeInsets.all(8.0),
                          child: Text(
                              "GPA of Semester ${widget.semNo} : ${resultCalc(start, end, widget.courseList)[widget.semNo-1].toStringAsFixed(2)}",
-                              style: TextStyle(fontSize: 18, )),
+                              style: const TextStyle(fontSize: 18, )),
                        ),
                        actions: <Widget>[
                          Center(child: OutlinedButton(onPressed: () => Navigator.pop(context,'OK'), child: const Text('OK')))
@@ -897,17 +896,17 @@ class _CalculatorState extends State<Calculator> {
                   }else {
                     if(light==true){
                       var map1 = { for (var e in grades) (grades.indexOf(e)+1).toString() : e };
-                      var result = docUser.set({
+                      var result = docUser.update({
                         'dept': widget.dept,
                         'st_type':widget.stType,
                         'semNo':widget.semNo,
                         'fastrack': widget.ftSem,
-                        'grades':map1,
+                        'grades.${widget.semNo}':grades[widget.semNo-1],
                       });
                     }
                     Navigator.push(context, MaterialPageRoute(
                         builder: (context) =>
-                            Result(result: resultCalc(start, end,widget.courseList), semNo: widget
+                            ResultPage(result: resultCalc(start, end,widget.courseList), semNo: widget
                                 .semNo)));
                   }
                 }, child: const Padding(
@@ -923,21 +922,3 @@ class _CalculatorState extends State<Calculator> {
     );
   }
 }
-
-
-
-// Dialog(
-// shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-// elevation:16,
-// child: SizedBox(
-// width: 280,
-// height: 400,
-// child: Center(
-// child: Text(
-// "GPA of Semester ${widget.semNo} : ${resultCalc(start, end)[widget.semNo-1].toStringAsFixed(2)}",
-// style: TextStyle(fontSize: 18, ),
-// ),
-// ),
-// ),
-// );
-

@@ -1,20 +1,19 @@
 import 'dart:core';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:cgpa_calculator/gradeInput.dart';
 
 
 // Result
-class Result extends StatefulWidget {
-  Result({Key? key, required this.result,required this.semNo}) : super(key: key);
+class ResultPage extends StatefulWidget {
+  const ResultPage({Key? key, required this.result,required this.semNo}) : super(key: key);
   final List result;
   final int semNo;
 
   @override
-  _ResultState createState() => _ResultState();
+  _ResultPageState createState() => _ResultPageState();
 }
 
-class _ResultState extends State<Result> {
+class _ResultPageState extends State<ResultPage> {
 
   @override
   Widget build(BuildContext context) {

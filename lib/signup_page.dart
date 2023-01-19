@@ -1,11 +1,19 @@
-// import 'dart:html';
-
 import 'package:cgpa_calculator/auth_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+final FirebaseAuth auth = FirebaseAuth.instance;
+var docUser = FirebaseFirestore.instance;
+Future<void> createUser(String uid,String username) async {
+  await docUser.collection('users').doc(uid).set({
+    "Name": username,
+  });
+}
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({Key? key}) : super(key: key);
@@ -16,9 +24,12 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   @override
+  var nameController = TextEditingController();
   var emailController = TextEditingController();
   var passwordController = TextEditingController();
   bool _passwordVisible = true;
+
+
   Widget build(BuildContext context) {
     double w = MediaQuery.of(context).size.width;
     double h = MediaQuery.of(context).size.height;
@@ -77,9 +88,48 @@ class _SignUpPageState extends State<SignUpPage> {
                         ]
                     ),
                     child: TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                          hintText: "Name",
+                          prefixIcon:  Icon(Icons.person, color: Colors.blue,),
+                          focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide(
+                                  color: Colors.white,
+                                  width: 1.0
+                              )
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide(
+                                  color: Colors.white,
+                                  width: 1.0
+                              )
+                          ),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30)
+                          )
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20,),
+                  Container(
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                              blurRadius: 10,
+                              spreadRadius: 7,
+                              offset: Offset(1,1),
+                              color: Colors.grey.withOpacity(0.2)
+                          )
+                        ]
+                    ),
+                    child: TextField(
                       controller: emailController,
                       decoration: InputDecoration(
-                        hintText: "Email id",
+                        hintText: "Official Email id",
                           prefixIcon:  Icon(Icons.email, color: Colors.blue,),
                           focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
@@ -157,26 +207,31 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                   ),
                   SizedBox(height: 20,),
-                  // Row(
-                  //   children: [
-                  //     Expanded(child: Container(),),
-                  //     Text(
-                  //       "Forgot Password?",
-                  //       style: TextStyle(
-                  //         fontSize: 16,
-                  //         fontWeight: FontWeight.bold,
-                  //         color: Colors.black38,
-                  //       ),
-                  //     )
-                  //   ],
-                  // ),
                 ],
               ),
             ),
             SizedBox(height: 55,),
             GestureDetector(
               onTap: (){
-                AuthController.instance.register(emailController.text.trim(), passwordController.text.trim());
+                if(emailController.text.trim().endsWith('psgtech.ac.in')){
+                  AuthController.instance.register(emailController.text.trim(), passwordController.text.trim()).then((uid){
+                    createUser(uid!,nameController.text);
+                  });
+                }
+                else if(passwordController.text.trim().length<8){
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'Password should contain atleast 8 characters'),
+                    ),);
+                }
+                else{
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                    content: Text(
+                        'Enter your official email id'),
+                  ),);
+                }
               },
               child: Container(
                 width: w*0.32,

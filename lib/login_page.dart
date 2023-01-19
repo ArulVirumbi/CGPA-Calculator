@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -18,6 +19,8 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool _passwordVisible=true;
+  final _formKey = GlobalKey<FormState>();
+  String _email = '';
   Widget build(BuildContext context) {
     double w = MediaQuery.of(context).size.width;
     double h = MediaQuery.of(context).size.height;
@@ -160,12 +163,71 @@ class _LoginPageState extends State<LoginPage> {
                   Row(
                     children: [
                       Expanded(child: Container(),),
-                      Text(
-                        "Forgot Password?",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black38,
+                      GestureDetector(
+                        onTap: (){
+                          showDialog(context: context, builder:(context){
+                            return AlertDialog(
+                              title: const Center(child: Text("Password Reset")),
+                              content: Container(
+                                height: 100,
+                                child: Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: TextFormField(
+                                          decoration: InputDecoration(
+                                            labelText: 'Email',
+                                          ),
+                                          validator: (value) {
+                                            if (value!.isEmpty) {
+                                              return 'Please enter your email';
+                                            }
+                                            return null;
+                                          },
+                                          onSaved: (value) => _email = value!,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              actions: <Widget>[
+                                Center(child: OutlinedButton(onPressed: ()  async {
+                                  if (_formKey.currentState!.validate()) {
+                                    _formKey.currentState!.save();
+                                    try {
+                                      await FirebaseAuth.instance.sendPasswordResetEmail(
+                                        email: _email.trim(),
+                                      );
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'Password reset email sent. Please check your email.'),
+                                        ),
+                                      );
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'An error occurred. Please check your email address and try again.'),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                }, child: Text('Submit'),))
+                              ],
+                            );
+                          });
+                        },
+                        child: Text(
+                          "Forgot Password?",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black38,
+                          ),
                         ),
                       )
                     ],
@@ -220,7 +282,8 @@ class _LoginPageState extends State<LoginPage> {
                   recognizer: TapGestureRecognizer()..onTap=()=>Get.to(()=>SignUpPage()),
                 )
               ]
-            ))
+            )),
+            SizedBox(height: 50)
           ],
         ),
       ),
