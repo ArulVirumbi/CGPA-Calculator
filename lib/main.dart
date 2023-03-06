@@ -403,7 +403,7 @@ class _MyHomePageState extends State<MyHomePage> {
         leading: GestureDetector(
           onTap: (){
             Navigator.push(context, MaterialPageRoute(
-                builder: (context) => developerPage()));
+                builder: (context) => DeveloperPage()));
           },
           child: const Icon(
             Icons.info_outline,
@@ -870,7 +870,7 @@ class _CalculatorState extends State<Calculator> {
                 ),onPressed: (){
                   if(widget.cgType=='GPA'){
                     if(light==true){
-                      var result = docUser.update({
+                      docUser.update({
                         "dept": widget.dept,
                         "st_type":widget.stType,
                         "semNo":widget.semNo,
@@ -896,12 +896,12 @@ class _CalculatorState extends State<Calculator> {
                   }else {
                     if(light==true){
                       var map1 = { for (var e in grades) (grades.indexOf(e)+1).toString() : e };
-                      var result = docUser.update({
+                      docUser.update({
                         'dept': widget.dept,
                         'st_type':widget.stType,
                         'semNo':widget.semNo,
                         'fastrack': widget.ftSem,
-                        'grades.${widget.semNo}':grades[widget.semNo-1],
+                        'grades':map1,
                       });
                     }
                     Navigator.push(context, MaterialPageRoute(

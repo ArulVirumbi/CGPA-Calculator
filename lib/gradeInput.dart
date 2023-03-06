@@ -1,11 +1,10 @@
 import 'dart:core';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
 
 // Grade Input
 class GradeInput extends StatefulWidget {
-  GradeInput({Key? key, required this.sem, required this.grades}) : super(key: key);
+  const GradeInput({Key? key, required this.sem, required this.grades}) : super(key: key);
   final Map sem;
   final List grades;
 

@@ -14,7 +14,7 @@ Future<void> _launchInBrowser(Uri url) async {
   }
 }
 
-class developerPage extends StatelessWidget {
+class DeveloperPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     double w = MediaQuery.of(context).size.width;
