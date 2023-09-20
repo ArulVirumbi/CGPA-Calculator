@@ -1,0 +1,85 @@
+{
+  "1": {
+    "Calculus and its Applications": 4,
+    "Physics": 3,
+    "Chemistry of Electronic materials": 3,
+    "Problem solving and C programming": 2,
+    "Electrical Engineering Drawing": 2,
+    "Problem solving and C programming Laboratory": 1,
+    "English language proficiency": 3
+  },
+  "2": {
+    "Basic Sciences laboratory": 2,
+    "Complex variables and transforms": 4,
+    "Semiconductor devices": 3,
+    "Applied electrochemistry": 3,
+    "Basics of mechanical engineering": 3,
+    "Engineering practices": 1,
+    "Language Elective": 2
+  },
+  "3": {
+    "Electric circuits": 4,
+    "Circuits & Devices laboratory": 2,
+    "Linear algebra and numerical analysis": 4,
+    "Electromagnetic theory": 3,
+    "DC machines and transformers": 3,
+    "DC machines and transformers laboratory": 1,
+    "Building communication skills": 2,
+    "Economics for engineers": 3
+  },
+  "4": {
+    "Network Theory": 4,
+    "Electronic circuits": 3,
+    "Electronic circuits laboratory": 1,
+    "Probability and statistics": 3,
+    "Measurements and Instrumentation": 3,
+    "Induction and synchronous machines": 3,
+    "Induction and synchronous machines laboratory": 2,
+    "Soft skills development": 1
+  },
+  "5": {
+    "Digital Electronics": 4,
+    "Control systems": 3,
+    "Electrical Power Generation systems": 3,
+    "Instrumentation and Control Laboratory": 1,
+    "Digital Electronics laboratory": 1,
+    "Linear Integrated circuits": 3,
+    "Power electronics and applications": 4,
+    "Business Managerial communications": 1
+  },
+  "6": {
+    "Embedded Controllers": 3,
+    "Electrical Machine Design": 4,
+    "Power Electronics and Embedded Controllers Laboratory": 1,
+    "Digital Signal Processing": 3,
+    "Transmission and Distribution": 4,
+    "Digital signal processing and linear integrated circuits laboratory": 1,
+    "Quantitative and reasoning skills": 1
+  },
+  "7": {
+    "Computer Architecture": 3,
+    "Data Structures using C++": 4,
+    "Professional Elective-1": 3,
+    "Innovation Practices": 1
+  },
+  "8": {
+    "Electrical Drives and Control": 3,
+    "Power System Protection and Switchgear": 3,
+    "Power System Analysis": 4,
+    "Professional Elective II": 3,
+    "Open Elective I": 3,
+    "Electric Drives and Control Laboratory": 1,
+    "Power System Laboratory": 1
+  },
+  "9": {
+    "Professional Elective III": 3,
+    "Professional Elective IV": 3,
+    "Professional Elective V": 3,
+    "Open Elective II": 3,
+    "Project Work I": 2
+  },
+  "10": {
+    "Project Work II": 4,
+    "Professional Elective VI": 3
+  }
+}

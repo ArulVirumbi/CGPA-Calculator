@@ -1,27 +1,25 @@
 import 'dart:core';
+import 'dart:convert';
 import 'package:async/async.dart';
-import 'package:cgpa_calculator/auth_controller.dart';
-import 'package:cgpa_calculator/result.dart';
-import 'package:cgpa_calculator/slider_widget.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:cgpa_calculator/gradeInput.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'firebase_options.dart';
 import 'package:get/get.dart';
 import 'package:group_button/group_button.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cgpa_calculator/developer_page.dart';
-// import 'package:cgpa_calculator/User.dart';
+import 'package:cgpa_calculator/gradeInput.dart';
+import 'package:cgpa_calculator/result.dart';
+import 'package:cgpa_calculator/slider_widget.dart';
+import 'package:http/http.dart' as http;
+
 
 List<String> type_list = <String>['Regular','Lateral'];
 List<int> sem_list = <int>[1,2,3,4,5,6,7,8,9,10];
 List<String> gpa_list = <String>['CGPA','GPA'];
 List<String> dept_list = <String>['EEE SW','Mechanical SW', 'Production SW'];
-List<String> fastrack_op = <String>['Yes', 'No'];
 
+
+// TODO: change this to database
 Map eeeCourseList = {
   1: {
     'Calculus and its Applications': 4,
@@ -209,7 +207,6 @@ Map mechCourseList = {
     'Project Work II' : 4
   }
 };
-
 //==================================================================================================================
 Map prodCourseList = {
   1: {
@@ -306,18 +303,11 @@ Map prodCourseList = {
 };
 
 List grades=[];
-final FirebaseAuth auth = FirebaseAuth.instance;
 
-
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  ).then((value)=>Get.put(AuthController()));
-
+void main() {
   runApp(const MyApp());
 }
+
 
 resultCalc(int start, int end, Map courseList){
   double res = 0.0;
@@ -334,8 +324,9 @@ resultCalc(int start, int end, Map courseList){
     totalCredit =  (credits[i] + totalCredit) as int?;
     tillCGPA[i] = res/totalCredit!;
   }
-    return tillCGPA;
+  return tillCGPA;
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -353,7 +344,6 @@ class MyApp extends StatelessWidget {
 }
 
 
-
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);
 
@@ -369,63 +359,46 @@ class _MyHomePageState extends State<MyHomePage> {
   int sem_no = 1;
   String cg_type = 'CGPA';
   String dept = 'EEE SW';
-  List ft_sem = [];
   int? stTypeValue = 0;
   int? cgTypeValue = 0;
-  List ftList = ["8"];
+  // TODO: name placeholder
   String userName='';
   @override
   void initState(){
     super.initState();
-    _getName();
   }
 
-  Future<void> _getName() async {
-    final User? user = auth.currentUser;
-    final uid = user?.uid;
-    final databaseReference = FirebaseFirestore.instance;
-    await databaseReference
-        .collection("users")
-        .doc(uid)
-        .get()
-        .then((DocumentSnapshot doc) {
-      setState(() {
-        userName = doc.get('Name');
-      });
-    });
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
 
       appBar: AppBar(
-        title: const Center(child: Text("CGPA Calculator")),
-        leading: GestureDetector(
-          onTap: (){
-            Navigator.push(context, MaterialPageRoute(
-                builder: (context) => DeveloperPage()));
-          },
-          child: const Icon(
-            Icons.info_outline,
+          title: const Center(child: Text("CGPA Calculator")),
+          leading: GestureDetector(
+            onTap: (){
+              Navigator.push(context, MaterialPageRoute(
+                  builder: (context) => DeveloperPage()));
+            },
+            child: const Icon(
+              Icons.info_outline,
+            ),
           ),
-        ),
           actions: <Widget>[
-          IconButton(onPressed: () {
-            AuthController.instance.logOut();
-            }, icon: const Icon(
-            Icons.logout_outlined,
-            size: 26.0,
-            )
-          ),]
+            IconButton(onPressed: null // TODO: logout button
+                , icon: const Icon(
+                  Icons.logout_outlined,
+                  size: 26.0,
+                )
+            ),]
       ),
       body:Container(
         height: MediaQuery.of(context).size.height,
         decoration: const BoxDecoration(
-        image: DecorationImage(
-            image: AssetImage("img/bg1.png"),
-            opacity: 0.1,
-            fit: BoxFit.cover,
-          )
+            image: DecorationImage(
+              image: AssetImage("img/bg1.png"),
+              opacity: 0.1,
+              fit: BoxFit.cover,
+            )
         ),
         child: SingleChildScrollView(
           child: Center(
@@ -456,15 +429,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     }).toList(),
                     onChanged: (String? newValue) {
                       setState(() {
-                        if(newValue == 'EEE SW'){
-                          ftList = ["8"];
-                        }
-                        else if(newValue == 'Mechanical SW'){
-                          ftList = ["7","8"];
-                        }
-                        else if(newValue == 'Production SW'){
-                          ftList = ["5","6","7"];
-                        }
                         dept = newValue!;
                       });
                     },
@@ -529,56 +493,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     },
                   ),
                 ),
-                const Text(
-                  "Select Fastrack sem",
-                  style: TextStyle(fontSize:20, fontWeight: FontWeight.bold),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top:4.0, bottom: 24.0),
-                  child: GroupButton(
-                    buttons: ftList,
-                    isRadio: false,
-                    options: GroupButtonOptions(
-                      selectedShadow: const [],
-                      selectedTextStyle: const TextStyle(
-                        fontSize: 20,
-                        color: Colors.white,
-                      ),
-                      selectedColor: Colors.blue[300],
-                      unselectedShadow: const [],
-                      unselectedColor: Colors.white54,
-                      unselectedTextStyle: const TextStyle(
-                        fontSize: 20,
-                        color: Colors.black,
-                      ),
-                      selectedBorderColor: Colors.blue[900],
-                      unselectedBorderColor: Colors.black,
-                      borderRadius: BorderRadius.circular(80),
-                      spacing: 20,
-                      runSpacing: 10,
-                      groupingType: GroupingType.wrap,
-                      direction: Axis.horizontal,
-                      buttonHeight: 50,
-                      buttonWidth: 50,
-                      mainGroupAlignment: MainGroupAlignment.center,
-                      crossGroupAlignment: CrossGroupAlignment.center,
-                      groupRunAlignment: GroupRunAlignment.start,
-                      textAlign: TextAlign.center,
-                      textPadding: EdgeInsets.zero,
-                      alignment: Alignment.center,
-                      elevation: 0,
-                    ),
-                    onSelected: (value,i,n) {
-                      setState(() {
-                        if(n==true) {
-                          ft_sem.add(value);
-                        }else{
-                          ft_sem.remove(value);
-                        }
-                      });
-                    },
-                  ),
-                ),
+
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(style: ButtonStyle(
@@ -587,81 +502,29 @@ class _MyHomePageState extends State<MyHomePage> {
                             borderRadius: BorderRadius.circular(36.0),
                           )
                       )
-                  ), onPressed: (){
+                  ), onPressed: () async {
                     if (st_type=='Lateral' && (sem_no==1 || sem_no==2)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Select Correct Semester Number')),
                       );
                     }
-                    else if(ft_sem.length>2){
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Fastrack semesters exceeded the limit')),
-                      );
-                    }
                     else {
-                      switch(dept){
-                        case 'EEE SW':
-                          course_list = eeeCourseList;
-                          if(ft_sem.contains('8')){
-                            course_list[10].removeWhere((key, value) => key == "Professional Elective VI");
-                            course_list[8].addEntries({"Professional Elective VI":3}.entries);
-                          }
-                          else{
-                            course_list[8].removeWhere((key, value) => key == "Professional Elective VI");
-                            course_list[10].addEntries({"Professional Elective VI":3}.entries);
-                          }
-                          break;
-                        case 'Mechanical SW':
-                          course_list = mechCourseList;
-                          if(ft_sem.contains('7')){
-                            course_list[9].removeWhere((key, value) => key == "Professional Elective V");
-                            course_list[8].addEntries({"Professional Elective V":3}.entries);
-                          }else{
-                            course_list[8].removeWhere((key, value) => key == "Professional Elective V");
-                            course_list[9].addEntries({"Professional Elective V":3}.entries);
-                          }
-                          if(ft_sem.contains('8')){
-                            course_list[9].removeWhere((key, value) => key == "Professional Elective VI");
-                            course_list[7].addEntries({"Professional Elective VI":3}.entries);
-                          }else{
-                            course_list[7].removeWhere((key, value) => key == "Professional Elective VI");
-                            course_list[9].addEntries({"Professional Elective VI":3}.entries);
-                          }
-                          break;
-                        case 'Production SW':
-                          course_list = prodCourseList;
-                          if(ft_sem.contains('5')){
-                            course_list[10].removeWhere((key, value) => key == "Professional Elective VI");
-                            course_list[8].addEntries({"Professional Elective VI":3}.entries);
-                          }
-                          else{
-                            course_list[8].removeWhere((key, value) => key == "Professional Elective V");
-                            course_list[9].addEntries({"Professional Elective V":3}.entries);
-                          }
-                          if(ft_sem.contains('6')){
-                            course_list[9].removeWhere((key, value) => key == "Professional Elective VI");
-                            course_list[7].addEntries({"Professional Elective VI":3}.entries);
-                          }else{
-                            course_list[7].removeWhere((key, value) => key == "Professional Elective VI");
-                            course_list[9].addEntries({"Professional Elective VI":3}.entries);
-                          }
-                          if(ft_sem.contains('7')){
-                            course_list[10].removeWhere((key, value) => key == "Professional Elective VI");
-                            course_list[8].addEntries({"Professional Elective VI":3}.entries);
-                          }
-                          else{
-                            course_list[8].removeWhere((key, value) => key == "Professional Elective V");
-                            course_list[9].addEntries({"Professional Elective V":3}.entries);
-                          }
-                          break;
+                      //TODO: change space to _ from selected option and fetch from github
+
+                      final response = await http.get(Uri.parse(""));
+
+                      if (response.statusCode == 200) {
+                        course_list = json.decode(response.body);
+                      } else {
+                        throw Exception('Failed to load JSON from GitHub');
                       }
 
                       grades = List.generate(10, (i) => List.generate(course_list[i+1].length,(index) => 8));
                       Navigator.push(context, MaterialPageRoute(
-                          builder: (context) => Calculator(dept: dept,stType: st_type, semNo: sem_no, cgType: cg_type, ftSem: ft_sem, courseList: course_list)));
+                          builder: (context) => Calculator(dept: dept,stType: st_type, semNo: sem_no, cgType: cg_type, courseList: course_list)));
                     }
                   }, child: const Padding(
-                    padding: EdgeInsets.only(top: 12.0, bottom: 12.0, left: 8.0, right: 8.0),
+                    padding: EdgeInsets.only(top: 20.0, bottom: 12.0, left: 8.0, right: 8.0),
                     child: Text('Submit', style: TextStyle(fontSize: 20),),
                   ),
                   ),
@@ -671,7 +534,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
           ),
         ),
-    ),
+      ),
 
     );
   }
@@ -683,15 +546,13 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 
-
 // Calculator Screen
 class Calculator extends StatefulWidget {
-  const Calculator({Key? key, required this.dept, required this.stType, required this.semNo, required this.cgType, required this.ftSem, required this.courseList}) : super(key: key);
+  const Calculator({Key? key, required this.dept, required this.stType, required this.semNo, required this.cgType, required this.courseList}) : super(key: key);
   final String dept;
   final String stType;
   final int semNo;
   final String cgType;
-  final List ftSem;
   final Map courseList;
 
   @override
@@ -705,9 +566,6 @@ class _CalculatorState extends State<Calculator> {
   bool _isButtonDisabled = false;
   @override
   Widget build(BuildContext context) {
-    final User? user = auth.currentUser;
-    final uid = user?.uid;
-    var docUser = FirebaseFirestore.instance.collection('users').doc(uid);
     int start = 0;
     int end = widget.semNo;
     int iter = widget.semNo;
@@ -743,8 +601,8 @@ class _CalculatorState extends State<Calculator> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 16.0),
+                    const Padding(
+                      padding: EdgeInsets.only(right: 16.0),
                       child: Text(
                         "Load Previously saved Grades",
                         style: TextStyle(fontSize: 16),
@@ -753,61 +611,20 @@ class _CalculatorState extends State<Calculator> {
                     CircleAvatar(
                       backgroundColor: Colors.blue,
                       radius: 20,
-                      child: IconButton(onPressed: _isButtonDisabled ? null : () async {
-                        var collection = FirebaseFirestore.instance.collection('users');
-                        var docSnapshot = await collection.doc(uid).get();
-                        if (docSnapshot.exists) {
-                          Map<String, dynamic>? data = docSnapshot.data();
-                          setState(() {
-                            if(data?['dept']==widget.dept){
-                              if (data?['semNo'] > widget.semNo ||
-                                  widget.ftSem.join(" ") ==
-                                      data?['fastrack'].join(" ")) {
-                                _currIndex = 1;
-                                for (var i = 1; i <= data?['semNo']; i++) {
-                                  grades[i - 1] = data?['grades'][i.toString()];
-                                }
-                                _isButtonDisabled = true;
-                              } else {
-                                Get.showSnackbar(GetSnackBar(
-                                  title: "Fastrack sem mismatch",
-                                  message:
-                                  "Select correct fasttrack sem, your saved values: ${data?['fastrack'].join(" ")}",
-                                  duration: Duration(seconds: 5),
-                                ));
-                              }
-                            }else{
-                              Get.showSnackbar(const GetSnackBar(
-                                title: "Department mismatch",
-                                message: "Select correct Department",
-                                duration: Duration(seconds: 5),
-                              ));
-                            }
-                          });
-                        }else{
-                          Get.showSnackbar(const GetSnackBar(
-                            title: "No values saved",
-                            message: "Save grades before loading",
-                            duration: Duration(seconds: 5),
-                          ));
-                        }
-
-
-                      },icon: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 350),
-                          transitionBuilder: (child, anim) => RotationTransition(
-                            turns: child.key == ValueKey('icon1')
-                                ? Tween<double>(begin: 0.75, end: 1).animate(anim)
-                                : Tween<double>(begin: 0.75, end: 1).animate(anim),
-                            child: ScaleTransition(scale: anim, child: child),
-                          ),
-                          child: _currIndex == 0
-                              ? Icon(Icons.download, key: const ValueKey('icon1'),size: 22.0, color: Colors.white,)
-                              : Icon(
-                            Icons.check,
-                            key: const ValueKey('icon2'),
-                            size: 22.0, color: Colors.white,
-                          )),
+                      //TODO: load grades from drive
+                      child: IconButton(onPressed: null
+                        ,icon: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 350),
+                            transitionBuilder: (child, anim) => RotationTransition(
+                              turns: child.key == const ValueKey('icon1')
+                                  ? Tween<double>(begin: 0.75, end: 1).animate(anim)
+                                  : Tween<double>(begin: 0.75, end: 1).animate(anim),
+                              child: ScaleTransition(scale: anim, child: child),
+                            ),
+                            child: _currIndex == 0
+                                ? const Icon(Icons.download, key: ValueKey('icon1'),size: 22.0, color: Colors.white,)
+                                : const Icon(Icons.check, key: ValueKey('icon2'),size: 22.0, color: Colors.white,)
+                        ),
 
                       ),
                     ),
@@ -828,15 +645,15 @@ class _CalculatorState extends State<Calculator> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 24.0),
                       child: Column(
-                          children:[
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: Text(
+                        children:[
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Text(
                                 "Semester ${index+1}",
                                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)
-                              ),
                             ),
-                            GradeInput(sem: widget.courseList[index+1], grades: grades[index]),
+                          ),
+                          GradeInput(sem: widget.courseList[index+1], grades: grades[index]),
                         ],
                       ),
                     );
@@ -864,45 +681,34 @@ class _CalculatorState extends State<Calculator> {
                 child: ElevatedButton(style: ButtonStyle(
                     shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                         RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.0),
+                          borderRadius: BorderRadius.circular(30.0),
                         )
                     )
                 ),onPressed: (){
                   if(widget.cgType=='GPA'){
+                    // Save GPA grades
                     if(light==true){
-                      docUser.update({
-                        "dept": widget.dept,
-                        "st_type":widget.stType,
-                        "semNo":widget.semNo,
-                        "fastrack": widget.ftSem,
-                        "grades.${widget.semNo}":grades[widget.semNo-1],
-                      });
+                      // TODO: logic to save grades of specific sem
                     }
                     showDialog(context: context, builder:(context){
-                     return AlertDialog(
-                       title: const Center(child: Text("Result")),
-                       content: Padding(
-                         padding: const EdgeInsets.all(8.0),
-                         child: Text(
-                             "GPA of Semester ${widget.semNo} : ${resultCalc(start, end, widget.courseList)[widget.semNo-1].toStringAsFixed(2)}",
+                      return AlertDialog(
+                        title: const Center(child: Text("Result")),
+                        content: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                              "GPA of Semester ${widget.semNo} : ${resultCalc(start, end, widget.courseList)[widget.semNo-1].toStringAsFixed(2)}",
                               style: const TextStyle(fontSize: 18, )),
-                       ),
-                       actions: <Widget>[
-                         Center(child: OutlinedButton(onPressed: () => Navigator.pop(context,'OK'), child: const Text('OK')))
-                       ],
-                     );
+                        ),
+                        actions: <Widget>[
+                          Center(child: OutlinedButton(onPressed: () => Navigator.pop(context,'OK'), child: const Text('OK')))
+                        ],
+                      );
                     });
 
                   }else {
+                    // Save all Grades
                     if(light==true){
-                      var map1 = { for (var e in grades) (grades.indexOf(e)+1).toString() : e };
-                      docUser.update({
-                        'dept': widget.dept,
-                        'st_type':widget.stType,
-                        'semNo':widget.semNo,
-                        'fastrack': widget.ftSem,
-                        'grades':map1,
-                      });
+                      //TODO: Logic to save all grades
                     }
                     Navigator.push(context, MaterialPageRoute(
                         builder: (context) =>
